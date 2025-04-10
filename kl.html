@@ -1,0 +1,2149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Chair Viewer with AR</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        overflow-x: hidden;
+    }
+    
+    header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 1rem;
+        text-align: center;
+    }
+    
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .viewer-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+    }
+    
+    #model-viewer-container {
+        width: 100%;
+        height: 60vh;
+        background-color: #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+    
+    button {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        background-color: #3498db;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    button:hover {
+        background-color: #2980b9;
+        transform: translateY(-2px);
+    }
+    
+    button.active {
+        background-color: #2c3e50;
+    }
+    
+    .ar-button {
+        background-color: #e74c3c;
+    }
+    
+    .ar-button:hover {
+        background-color: #c0392b;
+    }
+    
+    .loading-indicator {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #3498db;
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .environments {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .environment {
+        width: 100px;
+        height: 100px;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 3px solid transparent;
+    }
+    
+    .environment:hover {
+        transform: scale(1.1);
+    }
+    
+    .environment.active {
+        border-color: #3498db;
+    }
+    
+    .environment img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .feature-section {
+        margin-top: 3rem;
+        text-align: center;
+    }
+    
+    .features {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .feature {
+        background-color: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        max-width: 300px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .feature:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature h3 {
+        margin-bottom: 1rem;
+        color: #2c3e50;
+    }
+    
+    .feature p {
+        color: #7f8c8d;
+        line-height: 1.6;
+    }
+    
+    footer {
+        background-color: #2c3e50;
+        color: white;
+        text-align: center;
+        padding: 1rem;
+        margin-top: 3rem;
+    }
+    
+    .ar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        flex-direction: column;
+    }
+    
+    .ar-message {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 8px;
+        max-width: 80%;
+        text-align: center;
+    }
+    
+    .ar-message h2 {
+        margin-bottom: 1rem;
+        color: #2c3e50;
+    }
+    
+    .ar-message p {
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+    
+    .close-button {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background-color: transparent;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+    
+    .ar-desktop-preview {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: none;
+        z-index: 2000;
+    }
+    
+    .ar-preview-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    
+    .ar-floor {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 40%;
+        background: linear-gradient(to bottom, #8B572A, #5D3A1E);
+        perspective: 500px;
+        transform: rotateX(60deg);
+        transform-origin: bottom;
+    }
+    
+    .ar-wall {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 60%;
+        background: linear-gradient(to bottom, #EAEAEA, #D4D4D4);
+    }
+    
+    .ar-model-container {
+        position: absolute;
+        bottom: 25%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 300px;
+        height: 300px;
+    }
+    
+    .ar-controls {
+        position: absolute;
+        bottom: 20px;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        z-index: 2010;
+    }
+    
+    .ar-preview-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background-color: rgba(255, 255, 255, 0.3);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+        cursor: pointer;
+        z-index: 2010;
+    }
+    
+    .ar-shadow {
+        position: absolute;
+        bottom: 0;
+        width: 150px;
+        height: 20px;
+        background: radial-gradient(ellipse, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 70%);
+        border-radius: 50%;
+        transform: translateX(-50%);
+        left: 50%;
+    }
+</style>
+</head>
+<body>
+<header>
+    <h1>Premium Chair 3D Viewer</h1>
+</header>
+
+<div class="container">
+    <div class="viewer-container">
+        <div id="model-viewer-container">
+            <div class="loading-indicator">
+                <div class="spinner"></div>
+                <p>Loading 3D Model...</p>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="rotate-button" class="active">Rotate View</button>
+            <button id="zoom-button">Zoom View</button>
+            <button id="pan-button">Pan View</button>
+            <button id="ar-button" class="ar-button">View in AR</button>
+            <button id="reset-button">Reset View</button>
+        </div>
+        
+        <h2>View in Different Environments</h2>
+        <div class="environments">
+            <div class="environment active" data-env="none">
+                <img src="/api/placeholder/100/100" alt="No background" />
+            </div>
+            <div class="environment" data-env="living-room">
+                <img src="/api/placeholder/100/100" alt="Living Room" />
+            </div>
+            <div class="environment" data-env="office">
+                <img src="/api/placeholder/100/100" alt="Office" />
+            </div>
+            <div class="environment" data-env="outdoor">
+                <img src="/api/placeholder/100/100" alt="Outdoor" />
+            </div>
+        </div>
+    </div>
+    
+    <div class="feature-section">
+        <h2>Experience Our Premium Chair</h2>
+        <div class="features">
+            <div class="feature">
+                <h3>360° Viewing</h3>
+                <p>Examine every detail of our premium chair from any angle with our interactive 3D viewer.</p>
+            </div>
+            <div class="feature">
+                <h3>Augmented Reality</h3>
+                <p>Place the chair in your own space to see how it fits with your existing decor.</p>
+            </div>
+            <div class="feature">
+                <h3>Different Environments</h3>
+                <p>See how our chair looks in various settings to help you make the perfect choice.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="ar-overlay">
+    <button class="close-button">×</button>
+    <div class="ar-message">
+        <h2>View in Augmented Reality</h2>
+        <p>For the best AR experience, please use a mobile device with AR capabilities. Point your camera at an open floor space to place the chair.</p>
+        <button id="start-ar">Launch AR Experience</button>
+        <button id="desktop-ar-preview">Desktop AR Preview</button>
+        <p><small>Note: Desktop preview simulates AR and is for testing only.</small></p>
+    </div>
+</div>
+
+<div class="ar-desktop-preview">
+    <button class="ar-preview-close">×</button>
+    <div class="ar-preview-container">
+        <div class="ar-wall"></div>
+        <div class="ar-floor"></div>
+        <div class="ar-model-container"></div>
+        <div class="ar-shadow"></div>
+    </div>
+    <div class="ar-controls">
+        <button id="ar-move-left">←</button>
+        <button id="ar-move-forward">↑</button>
+        <button id="ar-move-backward">↓</button>
+        <button id="ar-move-right">→</button>
+        <button id="ar-rotate-left">↺</button>
+        <button id="ar-rotate-right">↻</button>
+    </div>
+</div>
+
+<!-- Three.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- Import Maps to handle ES modules -->
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js"
+    }
+}
+</script>
+<!-- WebXR API Button -->
+<script src="https://unpkg.com/three@0.128.0/examples/js/webxr/ARButton.js"></script>
+<!-- AR.js for augmented reality features -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/AR.js/3.3.1/ar.js"></script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'https://unpkg.com/three@0.128.0/examples/jsm/controls/OrbitControls.js';
+    import { GLTFLoader } from 'https://unpkg.com/three@0.128.0/examples/jsm/loaders/GLTFLoader.js';
+    
+    // Main application
+    document.addEventListener('DOMContentLoaded', () => {
+        const modelViewerContainer = document.getElementById('model-viewer-container');
+        const loadingIndicator = document.querySelector('.loading-indicator');
+        const rotateButton = document.getElementById('rotate-button');
+        const zoomButton = document.getElementById('zoom-button');
+        const panButton = document.getElementById('pan-button');
+        const arButton = document.getElementById('ar-button');
+        const resetButton = document.getElementById('reset-button');
+        const environments = document.querySelectorAll('.environment');
+        const arOverlay = document.querySelector('.ar-overlay');
+        const closeButton = document.querySelector('.close-button');
+        const startArButton = document.getElementById('start-ar');
+        
+        // Three.js setup
+        let scene, camera, renderer, controls, chair;
+        let currentEnvironment = 'none';
+        
+        // Initialize the 3D scene
+        function init() {
+            // Create the scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f0f0);
+            
+            // Create the camera
+            camera = new THREE.PerspectiveCamera(
+                75, 
+                modelViewerContainer.clientWidth / modelViewerContainer.clientHeight, 
+                0.1, 
+                1000
+            );
+            camera.position.z = 2;
+            camera.position.y = 1;
+            
+            // Create the renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(modelViewerContainer.clientWidth, modelViewerContainer.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            
+            // Clear container and append renderer
+            while (modelViewerContainer.firstChild) {
+                modelViewerContainer.removeChild(modelViewerContainer.firstChild);
+            }
+            modelViewerContainer.appendChild(renderer.domElement);
+            
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // Add a soft light from the opposite direction
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            fillLight.position.set(-1, 0.5, -1);
+            scene.add(fillLight);
+            
+            // Add controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = false;
+            controls.minDistance = 1;
+            controls.maxDistance = 5;
+            controls.maxPolarAngle = Math.PI / 1.5;
+            
+            // Set initial control mode
+            setControlMode('rotate');
+            
+            // Load the chair model (using a placeholder URL - replace with your actual .glb file)
+            loadChairModel();
+            
+            // Add a grid to help with perspective
+            const gridHelper = new THREE.GridHelper(10, 10, 0x888888, 0xcccccc);
+            scene.add(gridHelper);
+            
+            // Create the animation loop
+            animate();
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+        }
+        
+        // Load the chair model
+        function loadChairModel() {
+            const loader = new GLTFLoader();
+            
+            // This is a placeholder URL - replace with your actual model URL
+            const modelUrl = 'https://cdn.shopify.com/3d/models/32408103c250bc8f/AeroMeshGLB.glb'; // You would replace this with your actual model path
+            
+            // For demo purposes, we'll create a simple chair geometry
+            // Remove this and uncomment the loader code when you have a real model
+            //createDemoChair();
+            
+            // Uncomment this when you have your actual .glb model
+            
+            loader.load(
+                modelUrl,
+                (gltf) => {
+                    // Success callback
+                    chair = gltf.scene;
+                    scene.add(chair);
+                    
+                    // Center the model
+                    const box = new THREE.Box3().setFromObject(chair);
+                    const center = box.getCenter(new THREE.Vector3());
+                    chair.position.x = -center.x;
+                    chair.position.y = -center.y;
+                    chair.position.z = -center.z;
+                    
+                    // Scale model to reasonable size
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 1 / maxDim;
+                    chair.scale.set(scale, scale, scale);
+                    
+                    // Enable shadows
+                    chair.traverse((node) => {
+                        if (node.isMesh) {
+                            node.castShadow = true;
+                            node.receiveShadow = true;
+                        }
+                    });
+                    
+                    // Hide loading indicator
+                    loadingIndicator.style.display = 'none';
+                },
+                (xhr) => {
+                    // Progress callback
+                    const percentComplete = (xhr.loaded / xhr.total) * 100;
+                    console.log(`Model ${percentComplete.toFixed(2)}% loaded`);
+                },
+                (error) => {
+                    // Error callback
+                    console.error('Error loading model:', error);
+                    loadingIndicator.innerHTML = 'Error loading model. Please try again.';
+                    
+                    // Create a demo chair on error
+                    //createDemoChair();
+                }
+            );
+            
+        }
+        
+        // Create a simple demo chair for preview purposes
+        function createDemoChair() {
+            // Create a group to hold all chair parts
+            chair = new THREE.Group();
+            
+            // Materials
+            const seatMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 }); // Brown wood
+            const metalMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x888888,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            
+            // Seat
+            const seatGeometry = new THREE.BoxGeometry(0.4, 0.05, 0.4);
+            const seat = new THREE.Mesh(seatGeometry, seatMaterial);
+            seat.position.y = 0.4;
+            seat.castShadow = true;
+            chair.add(seat);
+            
+            // Backrest
+            const backrestGeometry = new THREE.BoxGeometry(0.4, 0.3, 0.05);
+            const backrest = new THREE.Mesh(backrestGeometry, seatMaterial);
+            backrest.position.y = 0.55;
+            backrest.position.z = -0.175;
+            backrest.castShadow = true;
+            chair.add(backrest);
+            
+            // Legs
+            const legGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.4);
+            const legPositions = [
+                { x: 0.15, z: 0.15 },
+                { x: -0.15, z: 0.15 },
+                { x: 0.15, z: -0.15 },
+                { x: -0.15, z: -0.15 }
+            ];
+            
+            legPositions.forEach(pos => {
+                const leg = new THREE.Mesh(legGeometry, metalMaterial);
+                leg.position.set(pos.x, 0.2, pos.z);
+                leg.castShadow = true;
+                chair.add(leg);
+            });
+            
+            // Add armrests
+            const armrestGeometry = new THREE.BoxGeometry(0.05, 0.2, 0.3);
+            
+            const leftArmrest = new THREE.Mesh(armrestGeometry, seatMaterial);
+            leftArmrest.position.set(-0.225, 0.5, -0.05);
+            leftArmrest.castShadow = true;
+            chair.add(leftArmrest);
+            
+            const rightArmrest = new THREE.Mesh(armrestGeometry, seatMaterial);
+            rightArmrest.position.set(0.225, 0.5, -0.05);
+            rightArmrest.castShadow = true;
+            chair.add(rightArmrest);
+            
+            // Add chair to scene
+            scene.add(chair);
+            
+            // Hide loading indicator
+            loadingIndicator.style.display = 'none';
+        }
+        
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = modelViewerContainer.clientWidth / modelViewerContainer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(modelViewerContainer.clientWidth, modelViewerContainer.clientHeight);
+        }
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // Set control mode (rotate, zoom, pan)
+        function setControlMode(mode) {
+            // Reset all buttons
+            rotateButton.classList.remove('active');
+            zoomButton.classList.remove('active');
+            panButton.classList.remove('active');
+            
+            switch(mode) {
+                case 'rotate':
+                    rotateButton.classList.add('active');
+                    controls.enableRotate = true;
+                    controls.enableZoom = false;
+                    controls.enablePan = false;
+                    break;
+                case 'zoom':
+                    zoomButton.classList.add('active');
+                    controls.enableRotate = false;
+                    controls.enableZoom = true;
+                    controls.enablePan = false;
+                    break;
+                case 'pan':
+                    panButton.classList.add('active');
+                    controls.enableRotate = false;
+                    controls.enableZoom = false;
+                    controls.enablePan = true;
+                    break;
+            }
+        }
+        
+        // Change environment background
+        function changeEnvironment(envName) {
+            currentEnvironment = envName;
+            
+            // Reset all environment buttons
+            environments.forEach(env => {
+                env.classList.remove('active');
+            });
+            
+            // Set the active environment button
+            document.querySelector(`.environment[data-env="${envName}"]`).classList.add('active');
+            
+            // Change the scene background based on environment
+            switch(envName) {
+                case 'none':
+                    scene.background = new THREE.Color(0xf0f0f0);
+                    break;
+                case 'living-room':
+                    scene.background = new THREE.Color(0xd9c6b0);
+                    break;
+                case 'office':
+                    scene.background = new THREE.Color(0xc0d6e4);
+                    break;
+                case 'outdoor':
+                    scene.background = new THREE.Color(0xaed581);
+                    break;
+            }
+            
+            // In a full implementation, you'd load environment textures
+            // or use cube maps to create realistic backgrounds
+        }
+        
+        // Reset the view to default
+        function resetView() {
+            if (controls) {
+                controls.reset();
+            }
+        }
+        
+        // Initialize AR experience
+        function initAR() {
+            // Check if it's an iOS device
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            
+            if (isIOS) {
+                // Use AR Quick Look for iOS devices
+                startARQuickLook();
+            } else if (navigator.xr) {
+                // Use WebXR for other devices
+                navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
+                    if (supported) {
+                        startARSession();
+                    } else {
+                        alert("AR is not supported on this device. Please try using a modern mobile device with AR capabilities.");
+                        closeAROverlay();
+                    }
+                }).catch(error => {
+                    console.error('Error checking AR support:', error);
+                    alert("There was an error checking AR support. Your device might not support AR features.");
+                    closeAROverlay();
+                });
+            } else {
+                alert("WebXR is not supported by your browser. Please try using Chrome on Android or Safari on iOS.");
+                closeAROverlay();
+            }
+        }
+        
+        // Start AR Quick Look for iOS devices
+        function startARQuickLook() {
+            // Create a temporary link to launch AR Quick Look
+            const anchor = document.createElement('a');
+            
+            // AR Quick Look uses USDZ files
+            // For testing, we'll use a sample chair USDZ from Apple
+            // In production, you would convert your GLB to USDZ and host it
+            anchor.setAttribute('rel', 'ar');
+            anchor.setAttribute('href', 'https://developer.apple.com/augmented-reality/quick-look/models/chair/chair.usdz');
+            anchor.setAttribute('id', 'ar-quicklook-anchor');
+            anchor.style.display = 'none';
+            
+            document.body.appendChild(anchor);
+            anchor.click();
+            
+            // Remove the anchor after clicking
+            setTimeout(() => {
+                if (anchor && anchor.parentNode) {
+                    anchor.parentNode.removeChild(anchor);
+                }
+                closeAROverlay();
+            }, 2000);
+        }
+        
+        // Start an AR session using WebXR
+        async function startARSession() {
+            try {
+                // Create a WebGL renderer for AR if it doesn't exist yet
+                if (!renderer) {
+                    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    renderer.setPixelRatio(window.devicePixelRatio);
+                    renderer.xr.enabled = true;
+                }
+                
+                // Create an AR button and append it to the body
+                const arButton = document.createElement('button');
+                arButton.style.position = 'absolute';
+                arButton.style.bottom = '20px';
+                arButton.style.left = '50%';
+                arButton.style.transform = 'translateX(-50%)';
+                arButton.style.padding = '12px 24px';
+                arButton.style.border = 'none';
+                arButton.style.borderRadius = '4px';
+                arButton.style.backgroundColor = '#e74c3c';
+                arButton.style.color = 'white';
+                arButton.style.fontWeight = 'bold';
+                arButton.style.zIndex = '9999';
+                arButton.textContent = 'START AR';
+                document.body.appendChild(arButton);
+                
+                // Set up the AR session and attach it to the renderer
+                const sessionInit = {
+                    requiredFeatures: ['hit-test'],
+                    optionalFeatures: ['dom-overlay'],
+                    domOverlay: { root: document.body }
+                };
+                
+                // Create the AR button that will start the XR session
+                const arButtonElement = ARButton.createButton(renderer, sessionInit);
+                document.body.appendChild(arButtonElement);
+                
+                // Create a scene for AR if it doesn't exist yet
+                if (!scene) {
+                    scene = new THREE.Scene();
+                }
+                
+                // Create a camera for AR
+                const camera = new THREE.PerspectiveCamera(
+                    75, window.innerWidth / window.innerHeight, 0.1, 1000
+                );
+                
+                // Add lights to the scene
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(0, 5, 0);
+                scene.add(directionalLight);
+                
+                // Create the reticle for placement
+                const reticleGeometry = new THREE.RingGeometry(0.15, 0.2, 32);
+                reticleGeometry.rotateX(-Math.PI / 2);
+                const reticleMaterial = new THREE.MeshBasicMaterial();
+                const reticle = new THREE.Mesh(reticleGeometry, reticleMaterial);
+                reticle.matrixAutoUpdate = false;
+                reticle.visible = false;
+                scene.add(reticle);
+                
+                // Clone the chair model for AR
+                let arChair;
+                if (chair) {
+                    arChair = chair.clone();
+                    arChair.scale.set(0.5, 0.5, 0.5); // Scale appropriately for AR
+                    arChair.visible = false;
+                    scene.add(arChair);
+                } else {
+                    // If no chair model exists, create a simple placeholder
+                    const chairGeometry = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+                    const chairMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+                    arChair = new THREE.Mesh(chairGeometry, chairMaterial);
+                    arChair.visible = false;
+                    scene.add(arChair);
+                }
+                
+                // Variables for hit testing
+                let hitTestSource = null;
+                let hitTestSourceRequested = false;
+                let chairPlaced = false;
+                
+                // Setup XR controller for touch events
+                const controller = renderer.xr.getController(0);
+                controller.addEventListener('select', () => {
+                    if (reticle.visible) {
+                        // Place the chair at the reticle position on tap
+                        if (!chairPlaced) {
+                            arChair.position.setFromMatrixPosition(reticle.matrix);
+                            arChair.visible = true;
+                            chairPlaced = true;
+                        } else {
+                            // If already placed, move it to new position
+                            arChair.position.setFromMatrixPosition(reticle.matrix);
+                        }
+                    }
+                });
+                scene.add(controller);
+                
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+                
+                // Animation loop with hit testing
+                renderer.setAnimationLoop((timestamp, frame) => {
+                    if (frame) {
+                        const referenceSpace = renderer.xr.getReferenceSpace();
+                        const session = renderer.xr.getSession();
+                        
+                        if (hitTestSourceRequested === false) {
+                            session.requestReferenceSpace('viewer').then(referenceSpace => {
+                                session.requestHitTestSource({ space: referenceSpace }).then(source => {
+                                    hitTestSource = source;
+                                });
+                            });
+                            
+                            session.addEventListener('end', () => {
+                                hitTestSourceRequested = false;
+                                hitTestSource = null;
+                                
+                                // Clean up when AR session ends
+                                arChair.visible = false;
+                                chairPlaced = false;
+                                
+                                // Remove AR button
+                                if (arButtonElement && arButtonElement.parentNode) {
+                                    arButtonElement.parentNode.removeChild(arButtonElement);
+                                }
+                                
+                                closeAROverlay();
+                            });
+                            
+                            hitTestSourceRequested = true;
+                        }
+                        
+                        if (hitTestSource) {
+                            const hitTestResults = frame.getHitTestResults(hitTestSource);
+                            
+                            if (hitTestResults.length && !chairPlaced) {
+                                const hit = hitTestResults[0];
+                                const pose = hit.getPose(referenceSpace);
+                                
+                                reticle.visible = true;
+                                reticle.matrix.fromArray(pose.transform.matrix);
+                            } else {
+                                reticle.visible = false;
+                            }
+                        }
+                        
+                        renderer.render(scene, camera);
+                    }
+                });
+                
+                closeAROverlay();
+            } catch (error) {
+                console.error('Error starting AR session:', error);
+                alert("There was an error starting the AR experience. Please try again or use a compatible device.");
+                closeAROverlay();
+            }
+        }
+        
+        // Open AR overlay
+        function openAROverlay() {
+            arOverlay.style.display = 'flex';
+        }
+        
+        // Close AR overlay
+        function closeAROverlay() {
+            arOverlay.style.display = 'none';
+        }
+        
+        // Event listeners
+        rotateButton.addEventListener('click', () => setControlMode('rotate'));
+        zoomButton.addEventListener('click', () => setControlMode('zoom'));
+        panButton.addEventListener('click', () => setControlMode('pan'));
+        arButton.addEventListener('click', openAROverlay);
+        resetButton.addEventListener('click', resetView);
+        
+        environments.forEach(env => {
+            env.addEventListener('click', () => {
+                changeEnvironment(env.getAttribute('data-env'));
+            });
+        });
+        
+        closeButton.addEventListener('click', closeAROverlay);
+        startArButton.addEventListener('click', initAR);
+        
+        // Initialize everything
+        init();
+    });
+</script>
+</body>
+</html>
+
+
+<script>
+
+        const productList = [
+            { id: "1", name: "Dual Gel Insole" },
+            { id: "2", name: "Max Comfort Arch Cushion Insole" },
+            { id: "3", name: "Heel Pad" },
+            { id: "4", name: "Arch Support Insole (Semi-Rigid)" },
+            { id: "5", name: "Arch Support Insole" },
+            { id: "6", name: "Arch Support Insole (Rigid)" },
+            { id: "7", name: "Arch Sports Insole" },
+            { id: "8", name: "Memory Foam Insole" },
+            { id: "9", name: "Dual Gel Pro Insole" },
+            { id: "10", name: "High Heels Ball of Foot" },
+            { id: "11", name: "Gel Cloud Insole" },
+            { id: "12", name: "Wedge Plus Cushion" },
+            { id: "13", name: "Car Wedge Seat Cushion" },
+            { id: "14", name: "Pro Seat Cushion" },
+            { id: "15", name: "Wedge Cushion" },
+            { id: "16", name: "Tailbone Pain Relief Cushion" },
+            { id: "17", name: "Car Backrest Cushion" },
+            { id: "18", name: "Posture Corrector Backrest" },
+            { id: "19", name: "Lumbar Back Rest Cushion" },
+            { id: "20", name: "Coccyx Seat Cushion" },
+            { id: "21", name: "Socket Seat Cushion" },
+            { id: "22", name: "Sofa Backrest Cushion" },
+            { id: "23", name: "Wedge Cushion" },
+            { id: "24", name: "Cozy Pillow" },
+            { id: "25", name: "Car Neck Pillow" },
+            { id: "26", name: "Cervical Plus Pillow" },
+            { id: "27", name: "Sleep Pillow" },
+            { id: "28", name: "Lap Desk Pillow" },
+            { id: "29", name: "Car Wedge Seat Cushion" },
+            { id: "30", name: "Travel Neck Pillow" },
+            { id: "31", name: "Deep Sleep Pillow" },
+            { id: "32", name: "Car Neck Rest Pillow" },
+            { id: "33", name: "Contour Cervical Pillow" },
+            { id: "34", name: "Cervical Butterfly Pillow" },
+            { id: "35", name: "Cuddle Pillow" },
+            { id: "36", name: "Cervical Pillow" },
+            { id: "37", name: "Sleeping Pillow for Neck & Shoulder Pain" },
+            { id: "38", name: "Office Neck Rest Pillow" },
+            { id: "39", name: "Barefoot Sock Shoe" },
+            { id: "40", name: "Active Socks" },
+            { id: "41", name: "Mattress Topper" },
+            { id: "42", name: "Lumbo Belt" },
+            { id: "43", name: "AeroMesh Ergo Chair" },
+            { id: "44", name: "3D Posture Plus Ergonomic Chair" },
+            { id: "45", name: "Frido Baby shoes" },
+            { id: "46", name: "Frido Heavy Duty Recliner Electric Wheelchair" },
+            { id: "47", name: "Frido Foldable Electric Wheelchair" },
+            { id: "48", name: "Frido Prime Electric Wheelchair" },
+            { id: "49", name: "Frido Foldable Travel Wheelchair" },
+            { id: "50", name: "Frido Walker" },
+            { id: "51", name: "Frido Walker with wheels" },
+            { id: "52", name: "Frido Walker Pro With Wheels" },
+            { id: "53", name: "Frido Shower Chair Pro" },
+            { id: "54", name: "2000 Commode Wheelchair" },
+            { id: "55", name: "Mobility SAC100 | Multipurpose Shower Commode Wheelchair" },
+            { id: "56", name: "Prime FPA007 | Attendant Propelled Shower Commode Wheelchair" },
+            { id: "57", name: "Prime FPS005 | Self Propelled Shower Commode Wheelchair" },
+            { id: "58", name: "Prime SAS100 | Attendant Propelled Shower Commode Wheelchair" },
+            { id: "59", name: "Prime SSS100 | Self Propelled Shower Commode Wheelchair" },
+            { id: "60", name: "GO Attendant Propelled | Travel and Shower Commode Wheelchair" },
+            { id: "61", name: "GO Self Propelled | Travel and Shower Commode Wheelchair" }
+        ];
+
+        let invoiceURL = "";
+        // For demonstration, let's generate 50 more products
+
+        function showError(input, message, opt = "") {
+            // If there's already an error displayed, remove it first
+            removeError(input);
+
+            // Add 'error' class to the input field
+            input.classList.add("error");
+
+            // Create error message element
+            const errorMsg = document.createElement("div");
+
+            if (opt === 'file-terms') {
+                errorMsg.classList.add("error-message-2");
+                errorMsg.classList.add("error-message-3");
+                document.getElementsByClassName("terms-group")[0].style.paddingTop = "4px";
+                document.getElementsByClassName("upload-box")[0].style.border = "1px solid red";
+                errorMsg.innerText = message;
+                input.parentNode.appendChild(errorMsg);
+                return;
+            }
+            else if (opt === "checkbox") {
+                errorMsg.classList.add("error-message-2");
+                errorMsg.innerText = message;
+                input.parentNode.appendChild(errorMsg);
+                return;
+            }
+            else if (opt === 'file') {
+                document.getElementsByClassName("terms-group")[0].style.paddingTop = "4px";
+                errorMsg.classList.add("error-message-3");
+                //make padding top to 4px of class terms-group
+                document.getElementsByClassName("upload-box")[0].style.border = "1px solid red";
+
+                errorMsg.innerText = message;
+                input.parentNode.appendChild(errorMsg);
+                return;
+            }
+            else if (opt === 'product') {
+                //make border red 
+
+                // errorMsg.classList.add("error-message-4");
+                // errorMsg.innerText = message;
+                document.querySelector(".add-more-btn").style.marginTop = "27px";
+
+                const productContainer = document.getElementById("product-container");
+
+                // Get all product items
+                const productItems = productContainer.getElementsByClassName("product-item");
+
+                if (productItems.length > 0) {
+
+
+                    const lastProductItem = productItems[productItems.length - 1];
+
+                    // Get its hidden select element
+                    const hiddenSelect = lastProductItem.querySelector('.hidden-select');
+
+
+                    // if (!hiddenSelect.value && productItems.length === 1) {
+                    //     return;
+                    // }
+                    // Check if a value has been selected
+                    if (!hiddenSelect.value) {
+                        // Remove any existing error message first
+                        const existingError = lastProductItem.querySelector('.error-message-4');
+                        if (existingError) existingError.remove();
+
+                        // Create and display error message
+                        const errorMessage = document.createElement('div');
+                        errorMessage.classList.add('error-message-4');
+                        errorMessage.textContent = 'Please select atleast one product';
+                        // errorMessage.style.color = '#FF0000';
+                        // errorMessage.style.fontSize = '12px';
+                        // errorMessage.style.marginTop = '5px';
+                        // errorMessage.style.marginBottom = '10px';
+
+                        // Insert error message below the dropdown
+                        lastProductItem.appendChild(errorMessage);
+
+                        // Highlight the dropdown to indicate error
+                        const header = lastProductItem.querySelector('.select-product-header');
+                        header.style.borderColor = '#FF0000';
+
+                        return; // Stop execution to prevent adding a new dropdown
+                    }
+
+                }
+                // Insert error message directly after the input
+                input.insertAdjacentElement('afterend', errorMsg);
+                return;
+            }
+            else {
+                errorMsg.classList.add("error-message");
+                errorMsg.innerText = message;
+                // Insert error message directly after the input
+                input.insertAdjacentElement('afterend', errorMsg);
+                return;
+            }
+
+
+        }
+
+        // --- Helper function to remove error for a specific input ---
+        function removeError(input) {
+            // Remove error class from input
+            input.classList.remove("error");
+
+            // Get the parent container
+            const parent = input.parentNode;
+
+            // Check for different error message classes
+            const errorMessages = parent.querySelectorAll(".error-message, .error-message-2, .error-message-3, .error-message-4");
+
+            // Remove all error message elements if they exist
+            errorMessages.forEach(msg => {
+                parent.removeChild(msg);
+            });
+
+            // Reset any special styling that may have been applied
+            if (parent.classList.contains("terms-group")) {
+                document.getElementsByClassName("terms-group")[0].style.paddingTop = "";
+            }
+
+            // Reset upload box border if it exists
+            const uploadBox = document.getElementsByClassName("upload-box")[0];
+            if (uploadBox) {
+                uploadBox.style.border = "";
+            }
+        }
+
+        function uploadFileToGCS(file) {
+            const bucketUrl = 'https://storage.googleapis.com/upload/storage/v1/b/[YOUR_BUCKET_NAME]/o?uploadType=multipart';
+
+            // Prepare the form data
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('name', file.name);  // This can be adjusted based on your naming convention
+
+            // Use the fetch API to upload the file
+            fetch(bucketUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer [YOUR_OAUTH_TOKEN]', // Add OAuth token if needed (optional)
+                },
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.mediaLink) {
+                        // You get a URL like: https://storage.googleapis.com/[bucket_name]/[file_name]
+                        const fileUrl = data.mediaLink;
+                        console.log('File uploaded successfully, URL:', fileUrl);
+                        // You can now send this URL to your Google Sheet or display it as needed
+                        return fileUrl;
+                    } else {
+                        console.error('Upload failed:', data);
+                        return null;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error uploading file:', error);
+                    return null;
+                });
+        }
+
+        const eventHandlers = new WeakMap();
+
+        const selectedProductMap = new Map(); // Maps product ID to container element
+
+        function initializeSearchableDropdowns() {
+            const selectContainers = document.querySelectorAll('.custom-select-container');
+
+            selectContainers.forEach(container => {
+                // Get references to the elements
+                const header = container.querySelector('.select-product-header');
+                const dropdown = container.querySelector('.dropdown-content');
+                const searchInput = container.querySelector('.search-input');
+                const hiddenSelect = container.querySelector('.hidden-select');
+                const selectedText = container.querySelector('.selected-text');
+
+                // First, remove any existing event listeners
+                if (eventHandlers.has(container)) {
+                    const handlers = eventHandlers.get(container);
+
+                    if (handlers.headerClick) {
+                        header.removeEventListener('click', handlers.headerClick);
+                    }
+
+                    if (handlers.searchInput) {
+                        searchInput.removeEventListener('input', handlers.searchInput);
+                    }
+
+                    // Remove option click handlers
+                    if (handlers.optionClicks) {
+                        handlers.optionClicks.forEach(handler => {
+                            handler.element.removeEventListener('click', handler.fn);
+                        });
+                    }
+                }
+
+                // Store new handlers
+                const handlers = {
+                    optionClicks: []
+                };
+
+                // Create header click handler
+                handlers.headerClick = function (e) {
+                    // Close all other open dropdowns first
+                    document.querySelectorAll('.dropdown-content').forEach(el => {
+                        if (el !== dropdown) el.classList.remove('dropdown-active');
+                    });
+
+                    // Before showing dropdown, update the dropdown options to hide already selected products
+                    updateDropdownOptions(container);
+
+                    dropdown.classList.toggle('dropdown-active');
+                    if (dropdown.classList.contains('dropdown-active')) {
+                        searchInput.focus();
+                    }
+                };
+
+                // Create search input handler
+                handlers.searchInput = function () {
+                    const searchValue = this.value.toLowerCase();
+                    let hasResults = false;
+
+                    // Get all option items except the placeholder
+                    const options = container.querySelectorAll('.option-item:not([data-value=""])');
+
+                    options.forEach(option => {
+                        // Skip if the option is already hidden due to being selected elsewhere
+                        if (option.classList.contains('already-selected')) return;
+
+                        const text = option.textContent.toLowerCase();
+
+                        if (text.indexOf(searchValue) > -1) {
+                            option.style.display = '';
+                            hasResults = true;
+                        } else {
+                            option.style.display = 'none';
+                        }
+                    });
+
+                    // Check if we need to show a "no results" message
+                    let noResultsEl = dropdown.querySelector('.no-results');
+
+                    if (!hasResults) {
+                        if (!noResultsEl) {
+                            noResultsEl = document.createElement('div');
+                            noResultsEl.classList.add('no-results');
+                            noResultsEl.textContent = 'No matching products found';
+                            dropdown.appendChild(noResultsEl);
+                        }
+                        noResultsEl.style.display = '';
+                    } else if (noResultsEl) {
+                        noResultsEl.style.display = 'none';
+                    }
+                };
+
+                // Add handlers to elements
+                header.addEventListener('click', handlers.headerClick);
+                searchInput.addEventListener('input', handlers.searchInput);
+
+                // Add click listeners to all option items
+                const options = container.querySelectorAll('.option-item');
+                options.forEach(option => {
+                    const optionHandler = function () {
+                        const value = this.getAttribute('data-value');
+                        const text = this.textContent;
+
+                        // If there was a previously selected value, remove it from the selected map
+                        const previousValue = hiddenSelect.value;
+                        if (previousValue && selectedProductMap.get(previousValue) === container) {
+                            selectedProductMap.delete(previousValue);
+                        }
+
+                        // Add the new value to the selected map
+                        if (value) {
+                            selectedProductMap.set(value, container);
+                        }
+
+                        // Update hidden select
+                        for (let i = 0; i < hiddenSelect.options.length; i++) {
+                            if (hiddenSelect.options[i].value === value) {
+                                hiddenSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+
+                        // Update displayed text
+                        selectedText.textContent = text;
+
+                        // Close dropdown
+                        dropdown.classList.remove('dropdown-active');
+
+                        // Clear search input
+                        searchInput.value = '';
+
+                        // Reset display of all options
+                        container.querySelectorAll('.option-item').forEach(opt => {
+                            opt.style.display = '';
+                        });
+
+                        // Hide no results message if it exists
+                        const noResults = container.querySelector('.no-results');
+                        if (noResults) noResults.style.display = 'none';
+
+                        // Trigger change event on hidden select
+                        const event = new Event('change', { bubbles: true });
+                        hiddenSelect.dispatchEvent(event);
+
+                        // Update all other dropdowns to reflect this selection
+                        refreshAllDropdowns();
+                    };
+
+                    // Store reference to this handler
+                    handlers.optionClicks.push({
+                        element: option,
+                        fn: optionHandler
+                    });
+
+                    option.addEventListener('click', optionHandler);
+                });
+
+                // Store all handlers for this container
+                eventHandlers.set(container, handlers);
+
+                // If this container has a selected value, add it to the map
+                if (hiddenSelect.value) {
+                    selectedProductMap.set(hiddenSelect.value, container);
+                }
+            });
+        }
+
+        // Update all dropdowns to reflect current selections
+        function refreshAllDropdowns() {
+            document.querySelectorAll('.custom-select-container').forEach(container => {
+                updateDropdownOptions(container);
+            });
+        }
+
+        // Update a specific dropdown's options based on current selections
+        function updateDropdownOptions(container) {
+            const dropdown = container.querySelector('.dropdown-content');
+            const hiddenSelect = container.querySelector('.hidden-select');
+
+            // Get all non-placeholder option items
+            const options = container.querySelectorAll('.option-item:not([data-value=""])');
+
+            options.forEach(option => {
+                const value = option.getAttribute('data-value');
+
+                // If this value is selected in another dropdown, hide it
+                if (selectedProductMap.has(value) && selectedProductMap.get(value) !== container) {
+                    option.style.display = 'none';
+                    option.classList.add('already-selected');
+                } else {
+                    option.style.display = '';
+                    option.classList.remove('already-selected');
+                }
+            });
+        }
+
+        // Populate dropdowns with product list
+        function populateDropdownWithProducts(container) {
+            const dropdown = container.querySelector('.dropdown-content');
+            const hiddenSelect = container.querySelector('.hidden-select');
+
+            // Clear existing product options (but keep the placeholder)
+            const existingOptions = dropdown.querySelectorAll('.option-item:not([data-value=""])');
+            existingOptions.forEach(option => option.remove());
+
+            // Clear hidden select options except the first one
+            while (hiddenSelect.options.length > 1) {
+                hiddenSelect.remove(1);
+            }
+
+            // Add placeholder option if it doesn't exist
+            // let placeholderOption = dropdown.querySelector('.option-item[data-value=""]');
+            // if (!placeholderOption) {
+            //     placeholderOption = document.createElement('div');
+            //     placeholderOption.classList.add('option-item');
+            //     placeholderOption.setAttribute('data-value', '');
+            //     placeholderOption.textContent = 'Select a product';
+            //     dropdown.appendChild(placeholderOption);
+            // }
+
+            // Add placeholder to hidden select if needed
+            if (hiddenSelect.options.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Select a product';
+                option.selected = true;
+                option.disabled = true;
+                hiddenSelect.appendChild(option);
+            }
+
+            // Add products to dropdown
+            productList.forEach(product => {
+                // Add to dropdown UI
+                const optionItem = document.createElement('div');
+                optionItem.classList.add('option-item');
+                optionItem.setAttribute('data-value', product.id);
+                optionItem.textContent = product.name;
+
+                // If this product is already selected in another dropdown, hide it
+                if (selectedProductMap.has(product.id) && selectedProductMap.get(product.id) !== container) {
+                    optionItem.style.display = 'none';
+                    optionItem.classList.add('already-selected');
+                }
+
+                dropdown.appendChild(optionItem);
+
+                // Add to hidden select
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = product.name;
+                hiddenSelect.appendChild(option);
+            });
+        }
+
+        // Create a new searchable dropdown
+        function createSearchableDropdown() {
+            // Create container
+            const container = document.createElement("div");
+            container.classList.add("custom-select-container");
+
+            // Create hidden select
+            const hiddenSelect = document.createElement("select");
+            hiddenSelect.classList.add("hidden-select");
+            hiddenSelect.name = "purchasedProducts[]";
+            hiddenSelect.innerHTML = `<option value="" selected disabled>Select a product</option>`;
+
+            // Create dropdown header
+            const header = document.createElement("div");
+            header.classList.add("select-product-header");
+            header.innerHTML = '<span class="selected-text">Select a product</span>';
+
+            // Create dropdown content
+            const content = document.createElement("div");
+            content.classList.add("dropdown-content");
+            content.innerHTML = `
+        <div class="search-container">
+          <input type="text" class="search-input" placeholder="Search products...">
+        </div>
+      
+    `;
+
+            // Assemble the dropdown
+            container.appendChild(hiddenSelect);
+            container.appendChild(header);
+            container.appendChild(content);
+
+            // Populate it with available products
+            populateDropdownWithProducts(container);
+
+            return container;
+        }
+
+        // Helper function to add delete button to product item
+        function addDeleteButton(productItem) {
+            // Check if it already has a delete button
+            if (productItem.querySelector('.delete-product-btn')) return;
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.type = "button";
+            deleteBtn.classList.add("delete-product-btn");
+            deleteBtn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18" stroke="#FF0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6 6L18 18" stroke="#FF0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    `;
+
+            // Add click event to delete button
+            deleteBtn.addEventListener("click", function () {
+                // Get the selected product ID from this dropdown
+                const hiddenSelect = productItem.querySelector('.hidden-select');
+                const selectedValue = hiddenSelect.value;
+
+                // Remove it from the selectedProductMap if it belongs to this container
+                if (selectedValue && selectedProductMap.get(selectedValue) === productItem.querySelector('.custom-select-container')) {
+                    selectedProductMap.delete(selectedValue);
+                }
+
+                // Remove the product item from DOM
+                productItem.remove();
+
+                // Refresh all other dropdowns to reflect the removal
+                refreshAllDropdowns();
+
+                // If only one product remains, remove its delete button
+                const productItems = document.querySelectorAll('.product-item');
+                if (productItems.length === 1) {
+                    const deleteBtn = productItems[0].querySelector('.delete-product-btn');
+                    if (deleteBtn) deleteBtn.remove();
+                }
+            });
+
+            productItem.appendChild(deleteBtn);
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function () {
+            // Populate first dropdown with products
+            const firstContainer = document.querySelector('.custom-select-container');
+            populateDropdownWithProducts(firstContainer);
+
+            // Initialize all dropdowns
+            initializeSearchableDropdowns();
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function (event) {
+                if (!event.target.closest('.custom-select-container')) {
+                    document.querySelectorAll('.dropdown-content').forEach(el => {
+                        el.classList.remove('dropdown-active');
+                    });
+                }
+            });
+        });
+
+        // Handle add more button
+        document.getElementById("add-product-btn").addEventListener("click", function () {
+            const productContainer = document.getElementById("product-container");
+
+            // Get all product items
+            const productItems = productContainer.getElementsByClassName("product-item");
+
+            if (productItems.length > 0) {
+
+                // Get the most recently added product item (last one)
+                const lastProductItem = productItems[productItems.length - 1];
+
+                // Get its hidden select element
+                const hiddenSelect = lastProductItem.querySelector('.hidden-select');
+
+
+                if (!hiddenSelect.value && productItems.length === 1) {
+                    return;
+                }
+                // Check if a value has been selected
+                if (!hiddenSelect.value) {
+                    // Remove any existing error message first
+                    const existingError = lastProductItem.querySelector('.error-message');
+                    if (existingError) existingError.remove();
+
+                    // Create and display error message
+                    const errorMessage = document.createElement('div');
+                    errorMessage.classList.add('error-message-4');
+                    errorMessage.textContent = 'Please select a product before adding another';
+                    // errorMessage.style.color = '#FF0000';
+                    // errorMessage.style.fontSize = '12px';
+                    // errorMessage.style.marginTop = '5px';
+                    // errorMessage.style.marginBottom = '10px';
+
+                    // Insert error message below the dropdown
+                    lastProductItem.appendChild(errorMessage);
+
+                    // Highlight the dropdown to indicate error
+                    const header = lastProductItem.querySelector('.select-product-header');
+                    header.style.borderColor = '#FF0000';
+
+                    return; // Stop execution to prevent adding a new dropdown
+                }
+
+            }
+
+            // If this is the second product being added, add a delete button to the first one
+            if (productItems.length === 1) {
+                addDeleteButton(productItems[0]);
+            }
+
+            // Create a new product wrapper
+            const wrapper = document.createElement("div");
+            wrapper.classList.add("product-item");
+
+            // Add the new searchable dropdown
+            wrapper.appendChild(createSearchableDropdown());
+
+            // Add delete button
+            addDeleteButton(wrapper);
+
+            // Add to the container
+            productContainer.appendChild(wrapper);
+
+            // Initialize the new dropdown
+            initializeSearchableDropdowns();
+        });
+        document.querySelector('.upload-box').addEventListener('click', function () {
+            const invoiceUpload = document.getElementById("invoiceUpload");
+
+            if (typeof removeError === 'function') {
+                removeError(invoiceUpload);
+            }
+
+            // Trigger the hidden file input when the box is clicked
+            invoiceUpload.click();
+        });
+
+         // Cloudinary configuration
+      const cloudinaryConfig = {
+        cloudName: "dhty6k0zg", // Replace with your Cloudinary cloud name
+        uploadPreset: "Frido Pro Reg", // Replace with your upload preset (unsigned)
+      };
+
+      // Function to upload file to Cloudinary
+      async function uploadToCloudinary(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", cloudinaryConfig.uploadPreset);
+
+        try {
+          const response = await fetch(
+            `https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/auto/upload`,
+            {
+              method: "POST",
+              body: formData,
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`Upload failed with status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          return data.secure_url; // Return the secure URL of the uploaded file
+        } catch (error) {
+          console.error("Cloudinary upload error:", error);
+          throw error;
+        }
+      }
+
+      // Modified event listener for file upload
+      document
+        .getElementById("invoiceUpload")
+        .addEventListener("change", async function () {
+          // Show selected filename or handle the file
+          if (this.files && this.files[0]) {
+            const file = this.files[0];
+            let invoiceURL = "";
+
+            // Only display preview for image files
+            if (file.type.match("image.*")) {
+              const reader = new FileReader();
+
+              reader.onload = function (e) {
+                // Set the image source to the file data
+                document.getElementById("previewImg").src = e.target.result;
+
+                // Hide upload box and show preview
+                document.getElementById("uploadBox").style.display = "none";
+                document.getElementById("imagePreview").style.display = "block";
+              };
+
+              reader.readAsDataURL(file);
+            } else if (file.type === "application/pdf") {
+              // For PDF files, show a placeholder
+              document.getElementById("previewImg").src =
+                "https://assets.replocdn.com/projects/6e10548c-60cd-452c-a8fe-ff9e1038ddfe/969ab5e4-9447-4cc9-a6be-617ea513e08b?width=200&height=300&fit=contain";
+              document.getElementById("uploadBox").style.display = "none";
+              document.getElementById("imagePreview").style.display = "block";
+            }
+
+            try {
+              // Show loading indicator
+              const statusElement =
+                document.getElementById("uploadStatus") ||
+                document.createElement("div");
+              statusElement.id = "uploadStatus";
+              statusElement.textContent = "Uploading...";
+              if (!document.getElementById("uploadStatus")) {
+                document
+                  .getElementById("imagePreview")
+                  .appendChild(statusElement);
+              }
+
+              // Upload file to Cloudinary instead of signed URL
+              invoiceURL = await uploadToCloudinary(file);
+              console.log("Cloudinary File URL:", invoiceURL);
+
+              // Update status and store the URL for form submission
+              statusElement.textContent = "";
+              statusElement.classList.add("success");
+
+              // Store the URL in a hidden input or variable for later form submission
+              document.getElementById("invoiceUrlField").value = invoiceURL;
+            } catch (error) {
+              console.error("Error uploading file:", error);
+              const statusElement =
+                document.getElementById("uploadStatus") ||
+                document.createElement("div");
+              statusElement.id = "uploadStatus";
+              statusElement.textContent = "Upload failed. Please try again.";
+              statusElement.classList.add("error");
+              if (!document.getElementById("uploadStatus")) {
+                document
+                  .getElementById("imagePreview")
+                  .appendChild(statusElement);
+              }
+            }
+          }
+        });
+      
+
+        document.getElementById('deleteButton').addEventListener('click', function (e) {
+            e.stopPropagation(); // Prevent triggering the upload box click
+
+            // Clear the file input
+            const invoiceUpload = document.getElementById('invoiceUpload');
+            invoiceUpload.value = '';
+
+            // Hide the preview and show the upload box again
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('uploadBox').style.display = 'flex';
+
+            // Reset the invoiceURL if you're using it
+            // invoiceURL = '';
+        });
+
+        document.getElementById('terms').addEventListener('click', function () {
+            removeError(this);
+        });
+
+        //pn click on dropdown of product selection, remove class error-message-4
+        document.querySelectorAll('.custom-select-container').forEach(container => {
+            container.addEventListener('click', function () {
+                // const errorMsg = document.querySelector('.error-message-4');
+                // if (errorMsg) {
+                //     errorMsg.remove();
+                // }
+                const productContainer = document.getElementById("product-container");
+
+                // Get all product items
+                const productItems = productContainer.getElementsByClassName("product-item");
+
+                if (productItems.length > 0) {
+
+
+                    const lastProductItem = productItems[productItems.length - 1];
+
+                    // Get its hidden select element
+                    const hiddenSelect = lastProductItem.querySelector('.hidden-select');
+
+
+
+                    const existingError = lastProductItem.querySelector('.error-message-4');
+                    if (existingError) existingError.remove();
+
+                    // Create and display error message
+                    // const errorMessage = document.createElement('div');
+                    // errorMessage.classList.add('error-message-4');
+                    // errorMessage.textContent = 'Please select atleast one product';
+                    // errorMessage.style.color = '#FF0000';
+                    // errorMessage.style.fontSize = '12px';
+                    // errorMessage.style.marginTop = '5px';
+                    // errorMessage.style.marginBottom = '10px';
+
+                    // Insert error message below the dropdown
+                    // lastProductItem.appendChild(errorMessage);
+
+                    // Highlight the dropdown to indicate error
+                    //const header = lastProductItem.querySelectorAll('.select-product-header');
+                    // header.style.borderColor = '#e3e3e3';
+                    document.querySelectorAll('.select-product-header').forEach(header => {
+                        header.style.borderColor = '#e3e3e3';
+                    });
+
+                    return; // Stop execution to prevent adding a new dropdown
+
+
+                }
+
+            });
+        });
+        const nameInputField = document.getElementById("frFullName");
+        const emailInputField = document.getElementById("frEmail");
+        const phoneInputField = document.getElementById("frPhone");
+        const orderIdInputField = document.getElementById("frOrderId");
+        const placeOfPurchaseInputField = document.getElementById("placeOfPurchase");
+        const purchasedProductsInputField = document.querySelectorAll('select[name="purchasedProducts[]"]');
+
+
+        nameInputField.addEventListener("input", function () {
+            this.classList.add("active-input");
+        });
+
+        emailInputField.addEventListener("input", function () {
+            this.classList.add("active-input");
+        });
+
+        phoneInputField.addEventListener("input", function () {
+            this.classList.add("active-input");
+        });
+
+        [
+            nameInputField,
+            emailInputField,
+            phoneInputField,
+            orderIdInputField,
+        ].forEach((field) => {
+            field.addEventListener("input", () => removeError(field));
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            let currentStep = 1;
+
+            function updateProgressBar(step) {
+                const progressBar = document.querySelector(".progress-bar");
+                progressBar.classList.remove(
+                    "progress-step-1",
+                    "progress-step-2",
+                    "progress-step-3"
+                );
+                progressBar.classList.add(`progress-step-${step}`);
+            }
+
+            document
+                .getElementById("continue-btn")
+                .addEventListener("click", function (e) {
+                    e.preventDefault();
+
+                    const submitBtn = this;
+                    submitBtn.disabled = true;
+
+                    // Trim values
+                    const fullName = nameInputField.value.trim();
+                    const email = emailInputField.value.trim();
+                    const phone = phoneInputField.value.trim();
+
+                    // Validate phone number (required)
+                    let hasError = false;
+
+                    if (!fullName) {
+                        showError(nameInputField, "Enter valid name");
+                        hasError = true;
+                    }
+
+
+                    if (!phone) {
+                        showError(phoneInputField, "Enter your mobile number");
+                        hasError = true;
+                    } else if (!/^\d{10}$/.test(phone.trim())) {
+                        showError(phoneInputField, "Enter a valid 10-digit mobile number");
+                        hasError = true;
+                    }
+
+                    // Email format validation
+                    const emailFormatRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                    // Only run these validations if email is not empty
+                    if (!email) {
+                        showError(emailInputField, "Enter your email address");
+                        hasError = true;
+                    }
+                    else if (!emailFormatRegex.test(email)) {
+                        showError(emailInputField, "Enter a valid email address");
+                        hasError = true;
+                    }
+
+
+                    if (hasError) {
+                        submitBtn.disabled = false;
+                        return;
+                    }
+
+                    submitBtn.disabled = false;
+
+
+                    document.getElementById("form-step-1").style.display = "none";
+                    document.getElementById("form-step-2").style.display = "block";
+                    document.getElementById("form-step-3").style.display = "none";
+                    currentStep = 2;
+                    updateProgressBar(currentStep);
+                });
+
+            document
+                .getElementById("continue-btn-2")
+                .addEventListener("click", function (e) {
+                    e.preventDefault();
+
+                    const submitBtn = this;
+                    submitBtn.disabled = true;
+
+                    const placeOfPurchase = document.getElementById("placeOfPurchase").value;
+                    const orderId = document.getElementById("frOrderId").value;
+
+                    const purchasedProducts = document.querySelectorAll('select[name="purchasedProducts[]"]');
+
+                    const hiddenSelects = document.querySelectorAll('.hidden-select');
+                    const selectedProducts = [];
+
+                    // Collect all selected products
+                    hiddenSelects.forEach(select => {
+                        if (select.value) {
+                            // Option 1: Get product names
+                            const selectedOption = select.options[select.selectedIndex];
+                            selectedProducts.push({
+                                id: select.value,
+                                name: selectedOption.textContent
+                            });
+                        }
+                    });
+
+                    let hasError = false;
+
+
+                    if (!orderId) {
+                        showError(document.getElementById("frOrderId"), "Enter your order ID");
+                        hasError = true;
+                    }
+                    if (orderId.length < 5) {
+                        showError(document.getElementById("frOrderId"), "Enter a valid order ID");
+                        hasError = true;
+                    }
+
+
+
+                    // Check if at least one product is selected
+                    if (selectedProducts.length === 0) {
+                        showError(document.querySelector('.custom-select-container'), "Select at least one product", 'product');
+                        hasError = true;
+                    }
+
+
+
+                    if (hasError) {
+                        submitBtn.disabled = false;
+                        return;
+                    }
+
+                    submitBtn.disabled = false;
+
+
+                    document.getElementById("form-step-1").style.display = "none";
+                    document.getElementById("form-step-2").style.display = "none";
+                    document.getElementById("form-step-3").style.display = "block";
+                    currentStep = 3;
+                    updateProgressBar(currentStep);
+                });
+
+            document
+                .getElementById("back-btn")
+                .addEventListener("click", function (e) {
+                    e.preventDefault();
+                    document.getElementById("form-step-2").style.display = "none";
+                    document.getElementById("form-step-1").style.display = "block";
+                    currentStep = 1;
+                    updateProgressBar(currentStep);
+                });
+
+            document
+                .getElementById("back-btn-2")
+                .addEventListener("click", function (e) {
+                    e.preventDefault();
+                    document.getElementById("form-step-2").style.display = "block";
+                    document.getElementById("form-step-3").style.display = "none";
+                    document.getElementById("form-step-1").style.display = "none";
+                    currentStep = 2;
+                    updateProgressBar(currentStep);
+                });
+        });
+
+        document.getElementById("placeOfPurchase").addEventListener("change", function () {
+            const orderIdInput = document.getElementById("frOrderId");
+            const placeholders = {
+                Amazon: "e.g. 406-8202803-9829949",
+                Flipkart: "e.g. OD123456789012345000",
+                Blinkit: "e.g. BLINK123456789",
+                Zepto: "e.g. #C&C15PBIQXXXXX"
+            };
+
+            orderIdInput.placeholder =
+                placeholders[this.value] || "Enter your order Id";
+        });
+
+        document.getElementById("fr-form-final-submit").addEventListener("click", async function () {
+
+            event.preventDefault();
+            // Get all hidden selects
+            const hiddenSelects = document.querySelectorAll('.hidden-select');
+            const selectedProducts = [];
+
+            // Collect all selected products
+            hiddenSelects.forEach(select => {
+                if (select.value) {
+                    // Option 1: Get product names
+                    const selectedOption = select.options[select.selectedIndex];
+                    selectedProducts.push({
+                        id: select.value,
+                        name: selectedOption.textContent
+                    });
+                }
+            });
+
+            // Display in console
+            console.log('Selected Products:', selectedProducts);
+            const submitBtn = this;
+            submitBtn.disabled = true;
+            const invoiceUpload = document.getElementById("invoiceUpload");
+            const termsCheckbox = document.getElementById("terms");
+            let hasError = false;
+            if (!invoiceUpload.files.length && !termsCheckbox.checked) {
+                showError(termsCheckbox, "You must accept the privacy and policy", 'file-terms', invoiceUpload);
+                hasError = true;
+            }
+
+            if (!invoiceUpload.files.length) {
+                showError(invoiceUpload, "Please upload your invoice", 'file');
+                hasError = true;
+            }
+            if (!termsCheckbox.checked) {
+                showError(termsCheckbox, "You must accept the privacy and policy", 'checkbox');
+                hasError = true;
+            }
+            if (hasError) {
+                submitBtn.disabled = false;
+                return;
+            }
+            submitBtn.disabled = false;
+            // Form submission logic here
+
+            const fullName = nameInputField.value.trim();
+            const email = emailInputField.value.trim();
+            const phone = phoneInputField.value.trim();
+            const placeOfPurchase = placeOfPurchaseInputField.value.trim();
+            const orderId = orderIdInputField.value.trim();
+            //selectedProducts is array, combine the items by commas
+            const purchasedProducts = selectedProducts.map(product => product.name).join(", ");
+            const invoiceFile = invoiceUpload.files[0];
+
+            const sheetData = {
+                'Full Name': fullName,
+                'Email': email,
+                'Phone': phone,
+                'Place of Purchase': placeOfPurchase,
+                'Order ID': orderId,
+                'Purchased Products': purchasedProducts,
+                "Invoice File": document.getElementById("invoiceUrlField").value || "NA",
+            };
+
+            try {
+                submitBtn.innerText = "SUBMITTING...";
+                const response = await fetch('https://script.google.com/macros/s/AKfycbz0peHQGDDZ-kcY7erCC_gy3o3rUaEv1T98PAyFz87eH9WGcRkLFmasmmgxnYnmuDnw/exec', {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(sheetData)
+                });
+                console.log(response);
+                submitBtn.innerText = "SUBMITTED";
+                
+                window.location.replace("https://myfrido.com/pages/product-registration-thank-you");
+            } catch (error) {
+                // window.location.replace("https://myfrido.com/pages/404-page");
+                submitBtn.innerText = "TRY AGAIN";
+                console.error('Error:', error);
+            }
+            return;
+
+        });
+
+
+
+        // Function to add delete button with SVG icon
+        function addDeleteButton(wrapper) {
+            const deleteBtn = document.createElement("button");
+            deleteBtn.classList.add("delete-product");
+            deleteBtn.type = "button";
+            deleteBtn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <g clip-path="url(#clip0_529_504)">
+                    <path d="M4 7H20" stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 11V17" stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M14 11V17" stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M5 7L6 19C6 19.5304 6.21071 20.0391 6.58579 20.4142C6.96086 20.7893 7.46957 21 8 21H16C16.5304 21 17.0391 20.7893 17.4142 20.4142C17.7893 20.0391 18 19.5304 18 19L19 7" stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 7V4C9 3.73478 9.10536 3.48043 9.29289 3.29289C9.48043 3.10536 9.73478 3 10 3H14C14.2652 3 14.5196 3.10536 14.7071 3.29289C14.8946 3.48043 15 3.73478 15 4V7" stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </g>
+                <defs>
+                    <clipPath id="clip0_529_504">
+                    <rect width="24" height="24" fill="white"/>
+                    </clipPath>
+                </defs>
+                </svg>
+                    `;
+
+            deleteBtn.addEventListener("click", function () {
+                wrapper.remove();
+
+                const productContainer = document.getElementById("product-container");
+                const productItems =
+                    productContainer.getElementsByClassName("product-item");
+
+                // Remove delete button from the last remaining dropdown
+                if (productItems.length === 1) {
+                    const existingDeleteBtn =
+                        productItems[0].querySelector(".delete-product");
+                    if (existingDeleteBtn) existingDeleteBtn.remove();
+                }
+            });
+
+            wrapper.appendChild(deleteBtn);
+        }
+
+    </script>
