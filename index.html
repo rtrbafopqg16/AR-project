@@ -1,377 +1,569 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR Chair Viewer</title>
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Arial', sans-serif;
-    }
-    
-    body {
-      background: #f8f9fa;
-      overflow-x: hidden;
-    }
-    
-    .container {
-      position: relative;
-      width: 100%;
-      height: 100vh;
-    }
-    
-    model-viewer {
-      width: 100%;
-      height: 100%;
-      --poster-color: transparent;
-    }
-    
-    .controls-panel {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-    
-    .panel-title {
-      text-align: center;
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #333;
-    }
-    
-    .color-variants {
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AR Chair Viewer</title>
+    <script
+      type="module"
+      src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+     @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Outfit", sans-serif;
+}
+
+      body {
+        background: #f8f9fa;
+        overflow-x: hidden;
+      }
+
+      .container {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+      }
+
+      model-viewer {
+        width: 100%;
+        height: 100%;
+        --poster-color: transparent;
+      }
+
+      .controls-panel {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .panel-title {
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #333;
+      }
+
+      .color-variants {
         position: absolute;
         bottom: 20px;
         left: 50%;
         transform: translateX(-50%);
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      margin-bottom: 5px;
-    }
-    
-    .color-variant {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      position: relative;
-      border: 1px solid #ddd;
-      background-color: #fff;
-    }
-    .color-variant img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    
-    
-    .color-variant.active {
-      border: 1px solid #fcd00b;
-      background-color: #fffae6;
-   
-    }
-    
-    
-    .variant-name {
-      text-align: center;
-      font-size: 16px;
-      margin-bottom: 15px;
-    }
-    
-    .controls {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      align-items: center;
-    }
-    
-    .zoom-controls {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      gap: 6px;
-    }
-    
-    .zoom-btn {
-      border: 1px solid #ddd;
-      border-radius: 50%;
-      background: transparent;
-      font-size: 18px;
-      width: 50px;
-      height: 50px;
-      cursor: pointer;
-      transition: background 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .zoom-btn:hover {
-      background: #f0f0f0;
-    }
-    
-    .zoom-btn:active {
-      background: #e0e0e0;
-    }
-    
-    @media (max-width: 768px) {
-    .container {
-      height: -webkit-fill-available;
-    }
-    model-viewer {
-      width: 100%;
-       height: -webkit-fill-available;
-      
-    }
-      
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-bottom: 5px;
+      }
+
       .color-variant {
-        width: 45px;
-        height: 45px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
+        border: 1px solid #ddd;
+        background-color: #fff;
       }
-      
+      .color-variant img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .color-variant.active {
+        border: 1px solid #fcd00b;
+        background-color: #fffae6;
+      }
+
+      .variant-name {
+        text-align: center;
+        font-size: 16px;
+        margin-bottom: 15px;
+      }
+
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .zoom-controls {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        gap: 6px;
+      }
+
       .zoom-btn {
-        width: 45px;
-        height: 45px;
+        border: 1px solid #ddd;
+        border-radius: 50%;
+        background: transparent;
+        font-size: 18px;
+        width: 50px;
+        height: 50px;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <model-viewer
-      id="chair-model"
-      src="https://cdn.shopify.com/3d/models/b4898f56b4c2fd04/AeroMeshGLB_3_.glb"
-      ios-src="https://cdn.shopify.com/3d/models/fbff2a680b480595/AeroMeshGLB.usdz"
-      ar
-      ar-modes="scene-viewer quick-look webxr"
-      camera-controls
-      environment-image="neutral"
-      alt="3D model of a chair"
-      shadow-intensity="1"
-      ar-scale="fixed"
-      exposure="0.5"
-      loading="eager"
-     ></model-viewer>
-   
-    
-    <div class="color-variants">
-        <div class="color-variant active" data-color="default" data-model="https://cdn.shopify.com/3d/models/b4898f56b4c2fd04/AeroMeshGLB_3_.glb" data-ios="https://cdn.shopify.com/3d/models/fbff2a680b480595/AeroMeshGLB.usdz"><img src="https://cdn.shopify.com/s/files/1/0553/0419/2034/files/02-1_7d50cc18-5827-408d-be25-23300902be35.png?v=1744288063" alt="Default Color"></div>
-        <div class="color-variant" data-color="black" data-model="https://cdn.shopify.com/3d/models/b4898f56b4c2fd04/AeroMeshGLB_3_.glb" data-ios="https://cdn.shopify.com/3d/models/fbff2a680b480595/AeroMeshGLB.usdz"><img src="https://cdn.shopify.com/s/files/1/0553/0419/2034/files/02_0689af39-0881-4dc6-9f11-ab031f2a7511.png?v=1744288063" alt="Black Color"></div>
-    </div>
-    <div class="controls-panel">
-      <div class="controls">
-        <div class="zoom-controls">
-          <button class="zoom-btn zoom-out"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 20 20" fill="none">
-            <g clip-path="url(#clip0_1722_6470)">
-              <path d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M5.83398 8.33325H10.834" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M17.5 17.5L12.5 12.5" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-            </g>
-            <defs>
-              <clipPath id="clip0_1722_6470">
-                <rect width="20" height="20" fill="white"/>
-              </clipPath>
-            </defs>
-          </svg></button>
-          <button class="zoom-btn zoom-in"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 20 20" fill="none">
-            <g clip-path="url(#clip0_1722_6476)">
-              <path d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M5.83398 8.33325H10.834" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M8.33398 5.83325V10.8333" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M17.5 17.5L12.5 12.5" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-            </g>
-            <defs>
-              <clipPath id="clip0_1722_6476">
-                <rect width="20" height="20" fill="white"/>
-              </clipPath>
-            </defs>
-          </svg></button>
-        </div>
-        
+      .zoom-btn:hover {
+        background: #f0f0f0;
+      }
 
+      .zoom-btn:active {
+        background: #e0e0e0;
+      }
+
+      .custom-ar-button {
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 50%;
+        background: transparent;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .panel-title {
+        font-size: 12px;
+        color: #252525;
+        margin-top: 5px;
+        font-weight: 500;
+      }
+
+      .custom-btn-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        /* float: right; */
+        top: 20%;
+        position: absolute;
+        right: 20px;
+        background: transparent;
+      
+        border: none;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          height: -webkit-fill-available;
+        }
+        model-viewer {
+          width: 100%;
+          height: -webkit-fill-available;
+        }
+
+        .color-variant {
+          width: 45px;
+          height: 45px;
+        }
+
+        .zoom-btn {
+          width: 45px;
+          height: 45px;
+        }
+
+        .custom-ar-button {
+          width: 45px;
+          height: 45px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <model-viewer
+        id="chair-model"
+        src="https://cdn.shopify.com/3d/models/b4898f56b4c2fd04/AeroMeshGLB_3_.glb"
+        ios-src="https://cdn.shopify.com/3d/models/fbff2a680b480595/AeroMeshGLB.usdz"
+        ar
+        ar-modes="scene-viewer quick-look webxr"
+        camera-controls
+        environment-image="neutral"
+        alt="3D model of a chair"
+        shadow-intensity="1"
+        ar-scale="fixed"
+        exposure="0.5"
+        loading="eager"
+      >
+        <button class="custom-btn-container" slot="ar-button">
+          <div class="custom-ar-button">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 20 20"
+              fill="none"
+            >
+              <path
+                d="M11.666 2.5L16.666 5.83333V11.6667"
+                stroke="#307FE2"
+                stroke-width="1.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M15 14.1667L10 17.5001L5 14.1667"
+                stroke="#307FE2"
+                stroke-width="1.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M3.33398 11.6667V5.83333L8.33398 2.5"
+                stroke="#307FE2"
+                stroke-width="1.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M3.33398 5.83325L10.0007 9.99992V17.4999"
+                stroke="#307FE2"
+                stroke-width="1.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M16.6667 5.83325L10 9.99992"
+                stroke="#307FE2"
+                stroke-width="1.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <p class="panel-title">Launch<br />AR</p>
+        </button>
+      </model-viewer>
+
+      <div class="color-variants">
+        <div
+          class="color-variant active"
+          data-color="default"
+          data-model="https://cdn.shopify.com/3d/models/b4898f56b4c2fd04/AeroMeshGLB_3_.glb"
+          data-ios="https://cdn.shopify.com/3d/models/fbff2a680b480595/AeroMeshGLB.usdz"
+        >
+          <img
+            src="https://cdn.shopify.com/s/files/1/0553/0419/2034/files/02-1_7d50cc18-5827-408d-be25-23300902be35.png?v=1744288063"
+            alt="Default Color"
+          />
+        </div>
+        <div
+          class="color-variant"
+          data-color="black"
+          data-model="https://cdn.shopify.com/3d/models/b4898f56b4c2fd04/AeroMeshGLB_3_.glb"
+          data-ios="https://cdn.shopify.com/3d/models/fbff2a680b480595/AeroMeshGLB.usdz"
+        >
+          <img
+            src="https://cdn.shopify.com/s/files/1/0553/0419/2034/files/02_0689af39-0881-4dc6-9f11-ab031f2a7511.png?v=1744288063"
+            alt="Black Color"
+          />
+        </div>
+      </div>
+      <div class="controls-panel">
+        <div class="controls">
+          <div class="zoom-controls">
+            <button class="zoom-btn zoom-out">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 20 20"
+                fill="none"
+              >
+                <g clip-path="url(#clip0_1722_6470)">
+                  <path
+                    d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z"
+                    stroke="black"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M5.83398 8.33325H10.834"
+                    stroke="black"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M17.5 17.5L12.5 12.5"
+                    stroke="black"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </g>
+                <defs>
+                  <clipPath id="clip0_1722_6470">
+                    <rect width="20" height="20" fill="white" />
+                  </clipPath>
+                </defs>
+              </svg>
+            </button>
+            <button class="zoom-btn zoom-in">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 20 20"
+                fill="none"
+              >
+                <g clip-path="url(#clip0_1722_6476)">
+                  <path
+                    d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z"
+                    stroke="black"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M5.83398 8.33325H10.834"
+                    stroke="black"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M8.33398 5.83325V10.8333"
+                    stroke="black"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M17.5 17.5L12.5 12.5"
+                    stroke="black"
+                    stroke-width="1.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </g>
+                <defs>
+                  <clipPath id="clip0_1722_6476">
+                    <rect width="20" height="20" fill="white" />
+                  </clipPath>
+                </defs>
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <script>
-    // Wait for both DOM and model-viewer to be ready
-    function ready(fn) {
-      if (document.readyState !== 'loading') {
-        fn();
-      } else {
-        document.addEventListener('DOMContentLoaded', fn);
-      }
-    }
-    
-    // Main initialization
-    ready(function() {
-      const modelViewer = document.getElementById('chair-model');
-      const colorVariants = document.querySelectorAll('.color-variant');
-      const zoomIn = document.querySelector('.zoom-in');
-      const zoomOut = document.querySelector('.zoom-out');
-      
-      // Store the original materials to restore for "default" color
-      let originalMaterials = [];
-      
-      // Once the model is loaded, store the original material properties
-      modelViewer.addEventListener('load', () => {
-        console.log('Model loaded successfully!');
-        
-        if (modelViewer.model && modelViewer.model.materials) {
-          const materials = modelViewer.model.materials;
-          console.log('Materials detected:', materials.length);
-          
-          // Store original material properties
-          materials.forEach((material, index) => {
-            console.log(`Material ${index}: ${material.name}`);
-            
-            // Store original color if available
-            if (material.pbrMetallicRoughness && material.pbrMetallicRoughness.baseColorFactor) {
-              originalMaterials[index] = [...material.pbrMetallicRoughness.baseColorFactor];
-            } else {
-              // Default to white if not available
-              originalMaterials[index] = [1, 1, 1, 1];
-            }
-          });
+    <script>
+      // Wait for both DOM and model-viewer to be ready
+      function ready(fn) {
+        if (document.readyState !== "loading") {
+          fn();
         } else {
-          console.warn('Model loaded but materials API not available');
+          document.addEventListener("DOMContentLoaded", fn);
         }
-      });
-      
-      modelViewer.addEventListener('error', (error) => {
-        console.error('Error loading model:', error);
-      });
-      
-      // Color variant selection
-      colorVariants.forEach(variant => {
-        variant.addEventListener('click', function() {
-          // Remove active class from all variants
-          colorVariants.forEach(v => v.classList.remove('active'));
-          
-          // Add active class to clicked variant
-          this.classList.add('active');
-          
-          // Get the color from data attribute
-          const color = this.getAttribute('data-color');
-          
-          try {
-            // Apply the material color change to the model
-            if (!modelViewer.loaded) {
-              modelViewer.addEventListener('load', () => {
-                applyColorChange(color);
-              }, { once: true });
-            } else {
-              applyColorChange(color);
-            }
-          } catch(e) {
-            console.warn("Material API failed, using fallback method", e);
-            // Fallback to CSS filters if Material API fails
-            applyColorFilterFallback(modelViewer, color);
+      }
+
+      // Main initialization
+      ready(function () {
+        const modelViewer = document.getElementById("chair-model");
+        const colorVariants = document.querySelectorAll(".color-variant");
+        const zoomIn = document.querySelector(".zoom-in");
+        const zoomOut = document.querySelector(".zoom-out");
+
+        // Store the original materials to restore for "default" color
+        let originalMaterials = [];
+
+        // Once the model is loaded, store the original material properties
+        modelViewer.addEventListener("load", () => {
+          console.log("Model loaded successfully!");
+
+          if (modelViewer.model && modelViewer.model.materials) {
+            const materials = modelViewer.model.materials;
+            console.log("Materials detected:", materials.length);
+
+            // Store original material properties
+            materials.forEach((material, index) => {
+              console.log(`Material ${index}: ${material.name}`);
+
+              // Store original color if available
+              if (
+                material.pbrMetallicRoughness &&
+                material.pbrMetallicRoughness.baseColorFactor
+              ) {
+                originalMaterials[index] = [
+                  ...material.pbrMetallicRoughness.baseColorFactor,
+                ];
+              } else {
+                // Default to white if not available
+                originalMaterials[index] = [1, 1, 1, 1];
+              }
+            });
+          } else {
+            console.warn("Model loaded but materials API not available");
           }
         });
-      });
-      
-      // Function to apply color change
-      function applyColorChange(color) {
-        try {
-          // Get all materials from the model
-          const materials = modelViewer.model.materials;
-          
-          if (!materials || materials.length === 0) {
-            console.error('No materials found in the model');
-            return;
-          }
-          
-          // For each material in the model
-          for (let i = 0; i < materials.length; i++) {
-            const material = materials[i];
-            
-            if (color === 'default') {
-              // Restore original material color if we have it stored
-              if (originalMaterials[i]) {
-                if (material.pbrMetallicRoughness && material.pbrMetallicRoughness.setBaseColorFactor) {
-                  material.pbrMetallicRoughness.setBaseColorFactor(originalMaterials[i]);
+
+        modelViewer.addEventListener("error", (error) => {
+          console.error("Error loading model:", error);
+        });
+
+        // Color variant selection
+        colorVariants.forEach((variant) => {
+          variant.addEventListener("click", function () {
+            // Remove active class from all variants
+            colorVariants.forEach((v) => v.classList.remove("active"));
+
+            // Add active class to clicked variant
+            this.classList.add("active");
+
+            // Get the color from data attribute
+            const color = this.getAttribute("data-color");
+
+            try {
+              // Apply the material color change to the model
+              if (!modelViewer.loaded) {
+                modelViewer.addEventListener(
+                  "load",
+                  () => {
+                    applyColorChange(color);
+                  },
+                  { once: true }
+                );
+              } else {
+                applyColorChange(color);
+              }
+            } catch (e) {
+              console.warn("Material API failed, using fallback method", e);
+              // Fallback to CSS filters if Material API fails
+              applyColorFilterFallback(modelViewer, color);
+            }
+          });
+        });
+
+        // Function to apply color change
+        function applyColorChange(color) {
+          try {
+            // Get all materials from the model
+            const materials = modelViewer.model.materials;
+
+            if (!materials || materials.length === 0) {
+              console.error("No materials found in the model");
+              return;
+            }
+
+            // For each material in the model
+            for (let i = 0; i < materials.length; i++) {
+              const material = materials[i];
+
+              if (color === "default") {
+                // Restore original material color if we have it stored
+                if (originalMaterials[i]) {
+                  if (
+                    material.pbrMetallicRoughness &&
+                    material.pbrMetallicRoughness.setBaseColorFactor
+                  ) {
+                    material.pbrMetallicRoughness.setBaseColorFactor(
+                      originalMaterials[i]
+                    );
+                  } else if (modelViewer.model.updateMaterial) {
+                    modelViewer.model.updateMaterial(material, {
+                      pbrMetallicRoughness: {
+                        baseColorFactor: originalMaterials[i],
+                      },
+                    });
+                  }
+                }
+              } else if (color === "black") {
+                // Set to black
+                const blackColor = [0.2, 0.2, 0.2, 1.0];
+
+                if (
+                  material.pbrMetallicRoughness &&
+                  material.pbrMetallicRoughness.setBaseColorFactor
+                ) {
+                  material.pbrMetallicRoughness.setBaseColorFactor(blackColor);
                 } else if (modelViewer.model.updateMaterial) {
                   modelViewer.model.updateMaterial(material, {
                     pbrMetallicRoughness: {
-                      baseColorFactor: originalMaterials[i]
-                    }
+                      baseColorFactor: blackColor,
+                    },
                   });
                 }
               }
-            } else if (color === 'black') {
-              // Set to black
-              const blackColor = [0.03, 0.03, 0.03, 1.0];
-              
-              if (material.pbrMetallicRoughness && material.pbrMetallicRoughness.setBaseColorFactor) {
-                material.pbrMetallicRoughness.setBaseColorFactor(blackColor);
-              } else if (modelViewer.model.updateMaterial) {
-                modelViewer.model.updateMaterial(material, {
-                  pbrMetallicRoughness: {
-                    baseColorFactor: blackColor
-                  }
-                });
-              }
             }
+
+            // Reset any filters that might have been applied
+            modelViewer.style.filter = "";
+          } catch (error) {
+            console.error("Error applying color change:", error);
           }
-          
-          // Reset any filters that might have been applied
-          modelViewer.style.filter = '';
-          
-        } catch (error) {
-          console.error('Error applying color change:', error);
         }
-      }
-      
-      // Zoom controls
-      zoomIn.addEventListener('click', function() {
-        const orbit = modelViewer.getCameraOrbit();
-        const radius = orbit.radius - 0.2;
-        modelViewer.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${Math.max(radius, 1)}m`;
+
+        // Zoom controls
+        zoomIn.addEventListener("click", function () {
+          const orbit = modelViewer.getCameraOrbit();
+          const radius = orbit.radius - 0.2;
+          modelViewer.cameraOrbit = `${orbit.theta}rad ${
+            orbit.phi
+          }rad ${Math.max(radius, 1)}m`;
+        });
+
+        zoomOut.addEventListener("click", function () {
+          const orbit = modelViewer.getCameraOrbit();
+          const radius = orbit.radius + 0.2;
+          modelViewer.cameraOrbit = `${orbit.theta}rad ${
+            orbit.phi
+          }rad ${Math.min(radius, 4)}m`;
+        });
+
+        // AR button click handler - Fix for AR functionality
+
+        // Debug AR capabilities
+        if (modelViewer) {
+          console.log("AR Available:", modelViewer.canActivateAR);
+          console.log("Quick Look supported:", modelViewer.quickLookSupported);
+          console.log(
+            "Scene Viewer supported:",
+            modelViewer.sceneViewerSupported
+          );
+        }
       });
-      
-      zoomOut.addEventListener('click', function() {
-        const orbit = modelViewer.getCameraOrbit();
-        const radius = orbit.radius + 0.2;
-        modelViewer.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${Math.min(radius, 4)}m`;
-      });
-      
-      // AR button click handler - Fix for AR functionality
-      
-      // Debug AR capabilities
-      if (modelViewer) {
-        console.log('AR Available:', modelViewer.canActivateAR);
-        console.log('Quick Look supported:', modelViewer.quickLookSupported);
-        console.log('Scene Viewer supported:', modelViewer.sceneViewerSupported);
+
+      // Add a fallback method for changing color if the material API isn't available
+      function applyColorFilterFallback(element, color) {
+        // Remove any existing filters
+        element.style.filter = "";
+
+        // Based on color, apply appropriate filter
+        if (color === "black") {
+          element.style.filter = "brightness(0.7) contrast(1.2) saturate(0)";
+        }
+        // No filter needed for default color
       }
-    });
-    
-    // Add a fallback method for changing color if the material API isn't available
-    function applyColorFilterFallback(element, color) {
-      // Remove any existing filters
-      element.style.filter = '';
-      
-      // Based on color, apply appropriate filter
-      if (color === 'black') {
-        element.style.filter = 'brightness(0.7) contrast(1.2) saturate(0)';
-      }
-      // No filter needed for default color
-    }
-  </script>
-</body>
+    </script>
+  </body>
 </html>
