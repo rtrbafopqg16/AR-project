@@ -22,7 +22,7 @@
     
     .container {
       position: relative;
-      width: 100%;
+      width: 100vw;
       height: 100vh;
     }
     
@@ -56,36 +56,36 @@
         transform: translateX(-50%);
       display: flex;
       justify-content: center;
-      gap: 30px;
+      gap: 6px;
       margin-bottom: 5px;
     }
     
     .color-variant {
-      width: 50px;
-      height: 50px;
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
       position: relative;
+      border: 1px solid #ddd;
+      background-color: #fff;
+    }
+    .color-variant img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     
-    .color-variant:hover {
-      transform: scale(1.1);
-    }
     
     .color-variant.active {
-      box-shadow: 0 0 0 3px #fff, 0 0 0 5px #333;
-      transform: scale(1.1);
+      border: 1px solid #fcd00b;
+      background-color: #fffae6;
+   
     }
     
-    .color-variant[data-color="default"] {
-      background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 50%, #d4d4d4 100%);
-      border: 1px solid #ddd;
-    }
-    
-    .color-variant[data-color="black"] {
-      background: #222;
-    }
     
     .variant-name {
       text-align: center;
@@ -102,15 +102,15 @@
     
     .zoom-controls {
       display: flex;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      flex-direction: column;
       overflow: hidden;
+      gap: 6px;
     }
     
     .zoom-btn {
-      border: none;
-      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 50%;
+      background: transparent;
       font-size: 18px;
       width: 50px;
       height: 50px;
@@ -129,39 +129,6 @@
       background: #e0e0e0;
     }
     
-    .ar-button {
-      border: none;
-      cursor: pointer;   
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      background-color: transparent;
-      transition: transform 0.2s;
-    }
-    
-    .ar-button:hover {
-      transform: scale(1.05);
-    }
-    
-    .ar-button:active {
-      transform: scale(0.98);
-    }
-    
-    .ar-button-icon {
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 50%;
-        background-color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 50px;
-        height: 50px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-    
     @media (max-width: 768px) {
       .controls-panel {
         padding: 15px;
@@ -176,15 +143,7 @@
         width: 45px;
         height: 45px;
       }
-      
-      .ar-button {
-        font-size: 10px;
-      }
-      
-      .ar-button-icon {
-        width: 40px;
-        height: 40px;
-      }
+
     }
   </style>
 </head>
@@ -207,26 +166,40 @@
    
     
     <div class="color-variants">
-        <div class="color-variant active" data-color="default" data-model="https://cdn.shopify.com/3d/models/b4898f56b4c2fd04/AeroMeshGLB_3_.glb" data-ios="https://cdn.shopify.com/3d/models/fbff2a680b480595/AeroMeshGLB.usdz"></div>
-        <div class="color-variant" data-color="black" data-model="https://cdn.shopify.com/3d/models/b4898f56b4c2fd04/AeroMeshGLB_3_.glb" data-ios="https://cdn.shopify.com/3d/models/fbff2a680b480595/AeroMeshGLB.usdz"></div>
+        <div class="color-variant active" data-color="default" data-model="https://cdn.shopify.com/3d/models/b4898f56b4c2fd04/AeroMeshGLB_3_.glb" data-ios="https://cdn.shopify.com/3d/models/fbff2a680b480595/AeroMeshGLB.usdz"><img src="https://cdn.shopify.com/s/files/1/0553/0419/2034/files/02-1_7d50cc18-5827-408d-be25-23300902be35.png?v=1744288063" alt="Default Color"></div>
+        <div class="color-variant" data-color="black" data-model="https://cdn.shopify.com/3d/models/b4898f56b4c2fd04/AeroMeshGLB_3_.glb" data-ios="https://cdn.shopify.com/3d/models/fbff2a680b480595/AeroMeshGLB.usdz"><img src="https://cdn.shopify.com/s/files/1/0553/0419/2034/files/02_0689af39-0881-4dc6-9f11-ab031f2a7511.png?v=1744288063" alt="Black Color"></div>
     </div>
     <div class="controls-panel">
       <div class="controls">
         <div class="zoom-controls">
-          <button class="zoom-btn zoom-out"><i class="fas fa-minus"></i></button>
-          <button class="zoom-btn zoom-in"><i class="fas fa-plus"></i></button>
+          <button class="zoom-btn zoom-out"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 20 20" fill="none">
+            <g clip-path="url(#clip0_1722_6470)">
+              <path d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M5.83398 8.33325H10.834" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M17.5 17.5L12.5 12.5" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+            <defs>
+              <clipPath id="clip0_1722_6470">
+                <rect width="20" height="20" fill="white"/>
+              </clipPath>
+            </defs>
+          </svg></button>
+          <button class="zoom-btn zoom-in"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 20 20" fill="none">
+            <g clip-path="url(#clip0_1722_6476)">
+              <path d="M2.5 8.33333C2.5 9.09938 2.65088 9.85792 2.94404 10.5657C3.23719 11.2734 3.66687 11.9164 4.20854 12.4581C4.75022 12.9998 5.39328 13.4295 6.10101 13.7226C6.80875 14.0158 7.56729 14.1667 8.33333 14.1667C9.09938 14.1667 9.85792 14.0158 10.5657 13.7226C11.2734 13.4295 11.9164 12.9998 12.4581 12.4581C12.9998 11.9164 13.4295 11.2734 13.7226 10.5657C14.0158 9.85792 14.1667 9.09938 14.1667 8.33333C14.1667 7.56729 14.0158 6.80875 13.7226 6.10101C13.4295 5.39328 12.9998 4.75022 12.4581 4.20854C11.9164 3.66687 11.2734 3.23719 10.5657 2.94404C9.85792 2.65088 9.09938 2.5 8.33333 2.5C7.56729 2.5 6.80875 2.65088 6.10101 2.94404C5.39328 3.23719 4.75022 3.66687 4.20854 4.20854C3.66687 4.75022 3.23719 5.39328 2.94404 6.10101C2.65088 6.80875 2.5 7.56729 2.5 8.33333Z" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M5.83398 8.33325H10.834" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8.33398 5.83325V10.8333" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M17.5 17.5L12.5 12.5" stroke="black" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+            <defs>
+              <clipPath id="clip0_1722_6476">
+                <rect width="20" height="20" fill="white"/>
+              </clipPath>
+            </defs>
+          </svg></button>
         </div>
         
-        <button class="ar-button" id="ar-button" slot="ar-button">
-          <div class="ar-button-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M11.666 2.5L16.666 5.83333V11.6667" stroke="#307FE2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M15 14.1667L10 17.5001L5 14.1667" stroke="#307FE2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M3.33398 11.6667V5.83333L8.33398 2.5" stroke="#307FE2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M3.33398 5.83325L10.0007 9.99992V17.4999" stroke="#307FE2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M16.6667 5.83325L10 9.99992" stroke="#307FE2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg></div>
-          Launch<br/>AR
-        </button>
+
       </div>
     </div>
   </div>
@@ -247,7 +220,6 @@
       const colorVariants = document.querySelectorAll('.color-variant');
       const zoomIn = document.querySelector('.zoom-in');
       const zoomOut = document.querySelector('.zoom-out');
-      const arButton = document.getElementById('ar-button');
       
       // Store the original materials to restore for "default" color
       let originalMaterials = [];
@@ -376,17 +348,6 @@
       });
       
       // AR button click handler - Fix for AR functionality
-      arButton.addEventListener('click', function() {
-        console.log('AR button clicked');
-        if (modelViewer.canActivateAR) {
-          console.log('Activating AR');
-          modelViewer.activateAR();
-        } else {
-          console.warn('AR not available on this device or browser');
-          // You could show a message to the user here
-          alert('AR is not available on your device or browser');
-        }
-      });
       
       // Debug AR capabilities
       if (modelViewer) {
