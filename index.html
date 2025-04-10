@@ -138,19 +138,28 @@
       gap: 8px;
       font-size: 14px;
       background-color: transparent;
+      transition: transform 0.2s;
     }
     
-
+    .ar-button:hover {
+      transform: scale(1.05);
+    }
     
     .ar-button:active {
-      transform: translateY(0);
+      transform: scale(0.98);
     }
     
-  
-    .ar-button-icon{
-        
+    .ar-button-icon {
+        padding: 10px;
         border: 1px solid #ddd;
         border-radius: 50%;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
     
     @media (max-width: 768px) {
@@ -170,7 +179,11 @@
       
       .ar-button {
         font-size: 10px;
-        padding: 12px 20px;
+      }
+      
+      .ar-button-icon {
+        width: 40px;
+        height: 40px;
       }
     }
   </style>
@@ -181,11 +194,16 @@
       id="chair-model"
       src="https://cdn.shopify.com/3d/models/b4898f56b4c2fd04/AeroMeshGLB_3_.glb"
       ios-src="https://cdn.shopify.com/3d/models/fbff2a680b480595/AeroMeshGLB.usdz"
+      ar
       ar-modes="scene-viewer quick-look webxr"
       camera-controls
       environment-image="neutral"
       alt="3D model of a chair"
-
+      shadow-intensity="1"
+      ar-scale="fixed"
+      exposure="0.5"
+      loading="eager"
+      reveal="auto">
     </model-viewer>
     
     <div class="color-variants">
@@ -193,15 +211,13 @@
         <div class="color-variant" data-color="black" data-model="https://cdn.shopify.com/3d/models/b4898f56b4c2fd04/AeroMeshGLB_3_.glb" data-ios="https://cdn.shopify.com/3d/models/fbff2a680b480595/AeroMeshGLB.usdz"></div>
     </div>
     <div class="controls-panel">
-      
-      
       <div class="controls">
         <div class="zoom-controls">
           <button class="zoom-btn zoom-out"><i class="fas fa-minus"></i></button>
           <button class="zoom-btn zoom-in"><i class="fas fa-plus"></i></button>
         </div>
         
-        <button class="ar-button" id="ar-button">
+        <button class="ar-button" id="ar-button" slot="ar-button">
           <div class="ar-button-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path d="M11.666 2.5L16.666 5.83333V11.6667" stroke="#307FE2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M15 14.1667L10 17.5001L5 14.1667" stroke="#307FE2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -229,7 +245,6 @@
     ready(function() {
       const modelViewer = document.getElementById('chair-model');
       const colorVariants = document.querySelectorAll('.color-variant');
-      const variantName = document.querySelector('.variant-name');
       const zoomIn = document.querySelector('.zoom-in');
       const zoomOut = document.querySelector('.zoom-out');
       const arButton = document.getElementById('ar-button');
@@ -275,9 +290,8 @@
           // Add active class to clicked variant
           this.classList.add('active');
           
-          // Update variant name
+          // Get the color from data attribute
           const color = this.getAttribute('data-color');
-         
           
           try {
             // Apply the material color change to the model
@@ -361,14 +375,28 @@
         modelViewer.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${Math.min(radius, 4)}m`;
       });
       
-      // AR button click handler
+      // AR button click handler - Fix for AR functionality
       arButton.addEventListener('click', function() {
-        modelViewer.activateAR();
+        console.log('AR button clicked');
+        if (modelViewer.canActivateAR) {
+          console.log('Activating AR');
+          modelViewer.activateAR();
+        } else {
+          console.warn('AR not available on this device or browser');
+          // You could show a message to the user here
+          alert('AR is not available on your device or browser');
+        }
       });
+      
+      // Debug AR capabilities
+      if (modelViewer) {
+        console.log('AR Available:', modelViewer.canActivateAR);
+        console.log('Quick Look supported:', modelViewer.quickLookSupported);
+        console.log('Scene Viewer supported:', modelViewer.sceneViewerSupported);
+      }
     });
     
     // Add a fallback method for changing color if the material API isn't available
-    // This uses CSS to apply a color filter to the entire model-viewer
     function applyColorFilterFallback(element, color) {
       // Remove any existing filters
       element.style.filter = '';
