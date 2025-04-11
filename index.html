@@ -4,14 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AR Chair Viewer</title>
-    <script
-      type="module"
-      src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
-    ></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
+    <!-- Use a specific stable version of model-viewer -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer@1.12.0/dist/model-viewer.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
     <style>
      @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
 
@@ -161,22 +156,20 @@
         align-items: center;
         justify-content: center;
         width: fit-content;
-        /* float: right; */
         top: 20%;
         position: absolute;
         right: 20px;
         background: transparent;
-      
         border: none;
       }
 
       @media (max-width: 768px) {
         .container {
-          height: -webkit-fill-available;
+          height: 100vh;
         }
         model-viewer {
           width: 100%;
-          height: -webkit-fill-available;
+          height: 100%;
         }
 
         .color-variant {
@@ -203,7 +196,7 @@
         src="https://cdn.shopify.com/3d/models/b4898f56b4c2fd04/AeroMeshGLB_3_.glb"
         ios-src="https://cdn.shopify.com/3d/models/fbff2a680b480595/AeroMeshGLB.usdz"
         ar
-        ar-modes="scene-viewer quick-look webxr"
+        ar-modes="scene-viewer quick-look"
         camera-controls
         environment-image="neutral"
         alt="3D model of a chair"
@@ -539,8 +532,6 @@
             orbit.phi
           }rad ${Math.min(radius, 4)}m`;
         });
-
-        // AR button click handler - Fix for AR functionality
 
         // Debug AR capabilities
         if (modelViewer) {
